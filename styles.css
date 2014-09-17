@@ -1,0 +1,24 @@
+.path-mod-stopwatch #stopwatchform.running #start {display:none;}
+.path-mod-stopwatch #stopwatchform.started #start {display:none;}
+.path-mod-stopwatch #stopwatchform.stopped #start {display:none;}
+
+.path-mod-stopwatch #stopwatchform #pause {display:none;}
+.path-mod-stopwatch #stopwatchform.running #pause {display:inline;}
+
+.path-mod-stopwatch #stopwatchform #resume {display:none;}
+.path-mod-stopwatch #stopwatchform.started #resume {display:inline;}
+.path-mod-stopwatch #stopwatchform.running #resume {display:none;}
+
+.path-mod-stopwatch #stopwatchform #reset {display:none;}
+.path-mod-stopwatch #stopwatchform.started #reset {display:inline;}
+
+.path-mod-stopwatch #stopwatchform #stop {display:none;}
+.path-mod-stopwatch #stopwatchform.started #stop {display:inline;}
+
+.path-mod-stopwatch #stopwatchform #clock {
+    font-size: 24; font-weight: bold; height: 35px; text-align: center; width: 174px;
+}
+
+.path-mod-stopwatch #stopwatchform input[type=button] {
+    font-weight: bold; width: 97px;
+}
