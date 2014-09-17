@@ -70,7 +70,7 @@ class mod_stopwatch_mod_form extends moodleform_mod {
     public function add_completion_rules() {
         $mform = $this->_form;
 
-        $mform->addElement('checkbox', 'completiontimed', get_string('completiontimed', 'stopwatch'),
+        $mform->addElement('advcheckbox', 'completiontimed', get_string('completiontimed', 'stopwatch'),
                 get_string('completiontimed_desc', 'stopwatch'));
         $mform->disabledIf('completionposts','completionpostsenabled', 'notchecked');
 

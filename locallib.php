@@ -22,3 +22,36 @@ defined('MOODLE_INTERNAL') || die();
 //function stopwatch_do_something_useful(array $things) {
 //    return new stdClass();
 //}
+
+function mod_stopwatch_update_timer(cm_info $cm, $stopwatch, $duration) {
+    global $USER, $DB, $CFG;
+    require_once($CFG->libdir . '/completionlib.php');
+
+    $record = $DB->get_record('stopwatch_timing', array(
+        'stopwatchid' => $cm->instance,
+        'userid' => $USER->id));
+    if ($record) {
+        $data = array(
+            'id' => $record->id,
+            'timemodified' => time(),
+            'duration' => $duration
+        );
+        $DB->update_record('stopwatch_timing', $data);
+    } else {
+        $data = array(
+            'courseid' => $cm->course,
+            'stopwatchid' => $cm->instance,
+            'userid' => $USER->id,
+            'timecreated' => time(),
+            'timemodified' => time(),
+            'duration' => $duration
+        );
+        $DB->insert_record('stopwatch_timing', $data);
+    }
+
+    // Update completion state
+    $completion = new completion_info($cm->get_course());
+    if($completion->is_enabled($cm) && ($stopwatch->completiontimed)) {
+        $completion->update_state($cm, COMPLETION_COMPLETE);
+    }
+}

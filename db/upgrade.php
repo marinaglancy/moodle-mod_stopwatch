@@ -43,5 +43,31 @@ function xmldb_stopwatch_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2014091103, 'stopwatch');
     }
 
+    if ($oldversion < 2014091104) {
+
+        // Define table stopwatch_timing to be created.
+        $table = new xmldb_table('stopwatch_timing');
+
+        // Adding fields to table stopwatch_timing.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('stopwatchid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('duration', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table stopwatch_timing.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for stopwatch_timing.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014091104, 'stopwatch');
+    }
+
     return true;
 }

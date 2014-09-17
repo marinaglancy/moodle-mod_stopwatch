@@ -22,3 +22,6 @@
 .path-mod-stopwatch #stopwatchform input[type=button] {
     font-weight: bold; width: 97px;
 }
+
+.path-mod-stopwatch #stopwatchform .modcompleted { display: none; }
+.path-mod-stopwatch #stopwatchform.stopped .modcompleted { display: block; }

@@ -21,7 +21,7 @@ defined('MOODLE_INTERNAL') || die();
 class mod_stopwatch_renderer extends plugin_renderer_base {
 
     public function display_stopwatch(cm_info $cm, $stopwatch) {
-        $this->page->requires->js_init_call('M.mod_stopwatch.init', array(), true);
+        $this->page->requires->js_init_call('M.mod_stopwatch.init', array($cm->id), true);
         $str = <<<EOD
 <form id="stopwatchform">
 <input id="clock" value="" />
@@ -31,7 +31,9 @@ class mod_stopwatch_renderer extends plugin_renderer_base {
 <input id="resume" type="button" value="Resume" />
 <input id="pause" type="button" value="Pause" />
 <input id="stop" type="button" value="Stop" />
+<p class="modcompleted">You completed the module!</p>
 </form>
+
      
 EOD;
         return $str;

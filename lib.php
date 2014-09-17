@@ -394,5 +394,5 @@ function stopwatch_extend_settings_navigation(settings_navigation $settingsnav, 
  */
 function stopwatch_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
-    return false;
+    return $DB->record_exists('stopwatch_timing', array('stopwatchid' => $cm->instance, 'userid' => $userid));
 }
