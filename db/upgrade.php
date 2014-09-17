@@ -28,5 +28,20 @@ function xmldb_stopwatch_upgrade($oldversion) {
 
     $dbman = $DB->get_manager(); // loads ddl manager and xmldb classes
 
+    if ($oldversion < 2014091103) {
+
+        // Define field completiontimed to be added to stopwatch.
+        $table = new xmldb_table('stopwatch');
+        $field = new xmldb_field('completiontimed', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'timemodified');
+
+        // Conditionally launch add field completiontimed.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014091103, 'stopwatch');
+    }
+
     return true;
 }
