@@ -9,19 +9,36 @@
 .path-mod-stopwatch #stopwatchform.started #resume {display:inline;}
 .path-mod-stopwatch #stopwatchform.running #resume {display:none;}
 
+/* Hide reset button completely for now */
 .path-mod-stopwatch #stopwatchform #reset {display:none;}
-.path-mod-stopwatch #stopwatchform.started #reset {display:inline;}
+/* .path-mod-stopwatch #stopwatchform.started #reset {display:inline;} */
 
 .path-mod-stopwatch #stopwatchform #stop {display:none;}
 .path-mod-stopwatch #stopwatchform.started #stop {display:inline;}
 
 .path-mod-stopwatch #stopwatchform #clock {
-    font-size: 24; font-weight: bold; height: 35px; text-align: center; width: 174px;
+    font-size: 3em;
+    font-weight: bold;
+    padding: 5px;
+    text-align: center;
+    width: 200px;
+    margin: 3px;
 }
 
 .path-mod-stopwatch #stopwatchform input[type=button] {
-    font-weight: bold; width: 97px;
+    font-weight: bold;
+    font-size: 2em;
+    width: 140px;
+    padding: 30px 10px;
+    background-image: none;
+    margin: 3px;
 }
 
 .path-mod-stopwatch #stopwatchform .modcompleted { display: none; }
 .path-mod-stopwatch #stopwatchform.stopped .modcompleted { display: block; }
+
+/* Color the buttons */
+
+.path-mod-stopwatch .greenbutton { background-color: #7aba7b }
+.path-mod-stopwatch .yellowbutton { background-color: #F2E886 }
+.path-mod-stopwatch .redbutton { background-color: #da4f49 }
