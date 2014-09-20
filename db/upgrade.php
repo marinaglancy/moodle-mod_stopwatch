@@ -69,5 +69,17 @@ function xmldb_stopwatch_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2014091104, 'stopwatch');
     }
 
+    if ($oldversion < 2014092000) {
+
+        $records = $DB->get_records('stopwatch_timing', array(), 'id', 'id, duration');
+        foreach ($records as $record) {
+            $DB->update_record('stopwatch_timing',
+                    array('id' => $record->id, 'duration' => floor($record->duration/1000)));
+        }
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014092000, 'stopwatch');
+    }
+
     return true;
 }

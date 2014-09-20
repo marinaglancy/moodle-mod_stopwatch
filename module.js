@@ -38,32 +38,6 @@ M.mod_stopwatch.init = function(Y, cmid) {
         totalduration += (new Date().getTime()) - lastresumed;
         Y.one('#stopwatchform').removeClass('running')
     }
-    var stoptimer = function() {
-        pausetimer();
-        Y.one('#stopwatchform').addClass('stopped')
-        Y.one('#stopwatchform').removeClass('started')
-
-        var params = {
-            sesskey : M.cfg.sesskey,
-            cmid : cmid,
-            timer : totalduration
-        }
-        var callback = {
-                method: "POST",
-                on: {
-                    success: function(id, o, args) {
-                                var data = Y.JSON.parse(o.responseText);
-                            },
-                    failure: function(o) {
-                    }
-                },
-                data: build_querystring(params)
-            };
-
-        Y.use('io-base', function(Y) {
-            Y.io('ajax.php', callback);
-        });
-    }
     var resettimer = function() {
         pausetimer();
         totalduration = 0;
@@ -73,7 +47,6 @@ M.mod_stopwatch.init = function(Y, cmid) {
 
     Y.one('#stopwatchform').one('#start').on('click', resumetimer);
     Y.one('#stopwatchform').one('#resume').on('click', resumetimer);
-    Y.one('#stopwatchform').one('#stop').on('click', stoptimer);
     Y.one('#stopwatchform').one('#pause').on('click', pausetimer);
     Y.one('#stopwatchform').one('#reset').on('click', resettimer);
     settimer(0);

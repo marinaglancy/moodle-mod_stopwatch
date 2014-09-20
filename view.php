@@ -14,11 +14,13 @@
 /// (Replace stopwatch with the name of your module and remove this line)
 
 require_once(dirname(dirname(__DIR__)) . '/config.php');
-require_once(__DIR__ . '/lib.php');
+require_once($CFG->dirroot . '/mod/stopwatch/lib.php');
+require_once($CFG->dirroot . '/mod/stopwatch/locallib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
 $cmid = optional_param('id', 0, PARAM_INT); // course_module ID, or
 $stopwatchid = optional_param('s', 0, PARAM_INT);  // stopwatch instance ID - it should be named as the first character of the module
+$durationstr = optional_param('durationstr', null, PARAM_NOTAGS);
 
 if ($cmid) {
     list($course, $cm) = get_course_and_cm_from_cmid($cmid, 'stopwatch');
@@ -30,6 +32,12 @@ if ($cmid) {
 
 require_login($course, true, $cm);
 $stopwatch = $PAGE->activityrecord;
+
+if ($durationstr && confirm_sesskey()) {
+    mod_stopwatch_update_timer($cm, $stopwatch,
+            mod_stopwatch_string_to_duration($durationstr));
+    redirect($cm->url);
+}
 
 \mod_stopwatch\event\course_module_viewed::create_from_cm($cm, $course, $stopwatch)->trigger();
 

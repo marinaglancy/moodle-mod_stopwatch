@@ -1,20 +1,13 @@
-.path-mod-stopwatch #stopwatchform.running #start {display:none;}
-.path-mod-stopwatch #stopwatchform.started #start {display:none;}
-.path-mod-stopwatch #stopwatchform.stopped #start {display:none;}
-
-.path-mod-stopwatch #stopwatchform #pause {display:none;}
-.path-mod-stopwatch #stopwatchform.running #pause {display:inline;}
-
-.path-mod-stopwatch #stopwatchform #resume {display:none;}
-.path-mod-stopwatch #stopwatchform.started #resume {display:inline;}
-.path-mod-stopwatch #stopwatchform.running #resume {display:none;}
-
-/* Hide reset button completely for now */
-.path-mod-stopwatch #stopwatchform #reset {display:none;}
-/* .path-mod-stopwatch #stopwatchform.started #reset {display:inline;} */
-
-.path-mod-stopwatch #stopwatchform #stop {display:none;}
-.path-mod-stopwatch #stopwatchform.started #stop {display:inline;}
+.path-mod-stopwatch #stopwatchform input[type=button],
+.path-mod-stopwatch #stopwatchform input[type=submit] {
+    font-weight: bold;
+    font-size: 2em;
+    min-width: 140px;
+    padding: 30px 10px;
+    background-image: none;
+    margin: 3px;
+    display: inline-block;
+}
 
 .path-mod-stopwatch #stopwatchform #clock {
     font-size: 3em;
@@ -25,20 +18,43 @@
     margin: 3px;
 }
 
-.path-mod-stopwatch #stopwatchform input[type=button] {
-    font-weight: bold;
-    font-size: 2em;
-    width: 140px;
-    padding: 30px 10px;
-    background-image: none;
-    margin: 3px;
-}
-
-.path-mod-stopwatch #stopwatchform .modcompleted { display: none; }
-.path-mod-stopwatch #stopwatchform.stopped .modcompleted { display: block; }
-
 /* Color the buttons */
 
 .path-mod-stopwatch .greenbutton { background-color: #7aba7b }
 .path-mod-stopwatch .yellowbutton { background-color: #F2E886 }
 .path-mod-stopwatch .redbutton { background-color: #da4f49 }
+
+.path-mod-stopwatch .timestartedcompleted {
+    display: inline-block;
+    font-size: 1.5em;
+}
+
+/* Hide/show controls */
+
+.path-mod-stopwatch #stopwatchform.running #start {display:none;}
+.path-mod-stopwatch #stopwatchform.started #start {display:none;}
+.path-mod-stopwatch #stopwatchform.stopped #start {display:none;}
+
+.path-mod-stopwatch #stopwatchform #pause {display:none;}
+.path-mod-stopwatch #stopwatchform.running #pause {display:inline-block;}
+
+.path-mod-stopwatch #stopwatchform #resume {display:none;}
+.path-mod-stopwatch #stopwatchform.started #resume {display:inline-block;}
+.path-mod-stopwatch #stopwatchform.running #resume {display:none;}
+
+/* Hide reset button completely for now */
+.path-mod-stopwatch #stopwatchform #reset {display:none;}
+/* .path-mod-stopwatch #stopwatchform.started #reset {display:inline;} */
+
+.path-mod-stopwatch #stopwatchform #stop {display:none;}
+.path-mod-stopwatch #stopwatchform.started #stop {display:inline-block;}
+
+.path-mod-stopwatch #stopwatchform.stopped #stop {
+    display:inline-block;
+    font-size: 1em;
+    background-color: #F2E886;
+    padding: 10px 10px;
+}
+
+.path-mod-stopwatch #stopwatchform .modcompleted { display: none; }
+.path-mod-stopwatch #stopwatchform.stopped .modcompleted { display: inline; }

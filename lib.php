@@ -394,23 +394,25 @@ function stopwatch_extend_settings_navigation(settings_navigation $settingsnav, 
  *   value depends on comparison type)
  */
 function stopwatch_get_completion_state($course, $cm, $userid, $type) {
-    return stopwatch_get_completed_time($cm, $userid) !== false;
+    global $CFG;
+    require_once($CFG->dirroot . '/mod/stopwatch/locallib.php');
+    return mod_stopwatch_get_user_timing($cm, $userid) !== false;
 }
 
 /**
- * Returns time (in milliseconds) a user has completed the module with
+ * Overwrites the content in the course-module object
  *
- * @param stdClass|cm_info $cm Course-module
- * @param int $userid User ID
- * @return int|false
+ * @param cm_info $cm
  */
-function stopwatch_get_completed_time($cm, $userid = null) {
-    global $DB, $USER;
-    if ($userid === null) {
-        $userid = $USER->id;
+function stopwatch_cm_info_view(cm_info $cm) {
+    global $CFG;
+    if ($cm->uservisible &&
+            has_capability('mod/stopwatch:view', $cm->context)) {
+        require_once($CFG->dirroot . '/mod/stopwatch/locallib.php');
+        if ($record = mod_stopwatch_get_user_timing($cm)) {
+            $cm->set_content('Completed in <b>' .
+                    mod_stopwatch_duration_to_string($record->duration) . '</b> on ' .
+                    userdate($record->timecreated, '%d/%m/%y <b>%H:%M</b>'));
+        }
     }
-    return $DB->get_field('stopwatch_timing', 'duration',
-            array('courseid' => $cm->course,
-                'stopwatchid' => $cm->instance,
-                'userid' => $userid));
 }
