@@ -112,7 +112,7 @@ function mod_stopwatch_update_grades($cm, $stopwatch, $durationarray, $gradearra
                 }
             }
         }
-        if (array_key_exists($userid, $gradearray)) {
+        if ($stopwatch->grade && array_key_exists($userid, $gradearray)) {
             $grade = empty($gradearray[$userid]) ? null : (float)$gradearray[$userid];
             $existinggrade = !strlen($record->grade) ? null : (float)$record->grade;
             if ($existinggrade !== $grade) {

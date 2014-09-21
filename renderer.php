@@ -92,10 +92,11 @@ EOD;
         $table->head = array(
             'User',
             'Duration',
-            'Completed on',
-            'Grade',
-            'Graded on'
-        );
+            'Completed on');
+        if ($stopwatch->grade) {
+            $table->head[] = 'Grade';
+            $table->head[] = 'Graded on';
+        }
 
         $records = mod_stopwatch_get_all_users($cm, $stopwatch);
         foreach ($records as $record) {
@@ -104,17 +105,23 @@ EOD;
                     array('type' => 'text',
                         'name' => "duration[$record->userid]",
                         'value' => $duration));
-            $gradeinput = html_writer::empty_tag('input',
-                    array('type' => 'text',
-                        'name' => "grade[$record->userid]",
-                        'value' => strlen($record->grade) ? (float)$record->grade : ''));
-            $table->data[] = (array)array(
+            $data = (array)array(
                 fullname($record),
                 $durationinput,
-                $record->timecreated ? userdate($record->timecreated, '%d/%m/%y <b>%H:%M</b>') : '',
-                $gradeinput,
-                $record->timegraded ? userdate($record->timegraded, '%d/%m/%y <b>%H:%M</b>') : ''
-            );
+                $record->timecreated ? userdate($record->timecreated, '%d/%m/%y <b>%H:%M</b>') : '');
+            if ($stopwatch->grade > 0) {
+                $gradeinput = html_writer::empty_tag('input',
+                        array('type' => 'text',
+                            'name' => "grade[$record->userid]",
+                            'value' => strlen($record->grade) ? (float)$record->grade : ''));
+                $data[] = $gradeinput;
+            } else if ($stopwatch->grade < 0) {
+                $data[] = 'Not implemented, sorry....';
+            }
+            if ($stopwatch->grade) {
+                $data[] = $record->timegraded ? userdate($record->timegraded, '%d/%m/%y <b>%H:%M</b>') : '';
+            }
+            $table->data[] = $data;
         }
 
         $str .= html_writer::table($table);
