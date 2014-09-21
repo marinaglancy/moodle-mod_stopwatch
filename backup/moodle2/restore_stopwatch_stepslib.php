@@ -43,6 +43,10 @@ class restore_stopwatch_activity_structure_step extends restore_activity_structu
             $data->timemodified = time();
         }
 
+        if ($data->grade < 0) { // Scale found, get mapping.
+            $data->grade = -($this->get_mappingid('scale', abs($data->grade)));
+        }
+
         // insert the stopwatch record
         $newitemid = $DB->insert_record('stopwatch', $data);
         // immediately after inserting "activity" record, call this

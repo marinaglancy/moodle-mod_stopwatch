@@ -20,12 +20,12 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $userid User ID
  * @return int|false
  */
-function mod_stopwatch_get_user_timing($cm, $userid = null) {
+function mod_stopwatch_get_user_record($cm, $userid = null) {
     global $DB, $USER;
     if ($userid === null) {
         $userid = $USER->id;
     }
-    return $DB->get_record('stopwatch_timing',
+    return $DB->get_record('stopwatch_user',
             array('courseid' => $cm->course,
                 'stopwatchid' => $cm->instance,
                 'userid' => $userid));
@@ -58,8 +58,9 @@ function mod_stopwatch_update_timer(cm_info $cm, $stopwatch, $duration) {
     global $USER, $DB, $CFG;
     require_once($CFG->libdir . '/completionlib.php');
 
-    $record = $DB->get_record('stopwatch_timing', array(
+    $record = $DB->get_record('stopwatch_user', array(
         'stopwatchid' => $cm->instance,
+        'courseid' => $cm->course,
         'userid' => $USER->id));
     if ($record) {
         $data = array(
@@ -67,7 +68,7 @@ function mod_stopwatch_update_timer(cm_info $cm, $stopwatch, $duration) {
             'timemodified' => time(),
             'duration' => $duration
         );
-        $DB->update_record('stopwatch_timing', $data);
+        $DB->update_record('stopwatch_user', $data);
     } else {
         $data = array(
             'courseid' => $cm->course,
@@ -77,7 +78,7 @@ function mod_stopwatch_update_timer(cm_info $cm, $stopwatch, $duration) {
             'timemodified' => time(),
             'duration' => $duration
         );
-        $DB->insert_record('stopwatch_timing', $data);
+        $DB->insert_record('stopwatch_user', $data);
     }
 
     // Update completion state
@@ -85,4 +86,77 @@ function mod_stopwatch_update_timer(cm_info $cm, $stopwatch, $duration) {
     if($completion->is_enabled($cm) && ($stopwatch->completiontimed)) {
         $completion->update_state($cm, COMPLETION_COMPLETE);
     }
+}
+
+function mod_stopwatch_update_grades($cm, $stopwatch, $durationarray, $gradearray) {
+    global $DB, $CFG;
+    require_once($CFG->libdir.'/gradelib.php');
+    $currentgrades = mod_stopwatch_get_all_users($cm, $stopwatch);
+    $newgrades = array();
+    foreach ($currentgrades as $userid => $record) {
+        $params = array('userid' => $userid, 'courseid' => $cm->course, 'stopwatchid' => $stopwatch->id);
+        if ($record->id) {
+            $params = array('id' => $record->id);
+        }
+        $now = time();
+        $updateobj = array();
+        if (array_key_exists($userid, $durationarray)) {
+            if (empty($durationarray[$userid])) {
+                if (!empty($record->duration)) {
+                    $updateobj['duration'] = 0;
+                }
+            } else {
+                $duration = mod_stopwatch_string_to_duration($durationarray[$userid]);
+                if ($record->duration != $duration) {
+                    $updateobj['duration'] = $duration;
+                }
+            }
+        }
+        if (array_key_exists($userid, $gradearray)) {
+            $grade = empty($gradearray[$userid]) ? null : (float)$gradearray[$userid];
+            $existinggrade = !strlen($record->grade) ? null : (float)$record->grade;
+            if ($existinggrade !== $grade) {
+                $updateobj['grade'] = $grade;
+                $updateobj['timegraded'] = $now;
+                $newgrades[$userid] = array('userid' => $userid, 'grade' => $grade);
+            }
+        }
+        if (empty($updateobj)) {
+            continue;
+        }
+        $updateobj += $params;
+        $updateobj['timemodified'] = $now;
+        if (!empty($updateobj['id'])) {
+            $DB->update_record('stopwatch_user', $updateobj);
+        } else {
+            $updateobj['timecreated'] = $now;
+            $DB->insert_record('stopwatch_user', $updateobj);
+        }
+    }
+    //if ($newgrades) {
+    //    grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, $newgrades);
+    //}
+
+                        // Attempt to update the grade item if relevant
+                        $grademodule = fullclone($stopwatch);
+                        $grademodule->cmidnumber = $cm->idnumber;
+                        $grademodule->modname = $cm->modname;
+                        grade_update_mod_grades($grademodule);
+}
+
+function mod_stopwatch_get_all_users(cm_info $cm, $stopwatch) {
+    global $DB;
+    $context = context_module::instance($cm->id);
+    list($sql, $params) = get_enrolled_sql($context, 'mod/stopwatch:submit');
+
+    $extrauserfields = get_extra_user_fields($context);
+    $fields = user_picture::fields('u', $extrauserfields, 'userid');
+    $sql = "SELECT $fields, s.id, s.duration, s.timecreated, s.grade, s.timegraded
+        FROM ($sql) e
+        JOIN {user} u ON e.id = u.id
+        LEFT JOIN {stopwatch_user} s ON e.id = s.userid AND
+            s.courseid = :courseid AND s.stopwatchid = :stopwatchid";
+    $params['courseid'] = $cm->course;
+    $params['stopwatchid'] = $stopwatch->id;
+    return $DB->get_records_sql($sql, $params);
 }

@@ -28,7 +28,7 @@ class backup_stopwatch_activity_structure_step extends backup_activity_structure
 
         // Define each element separated
         $stopwatch = new backup_nested_element('stopwatch', array('id'), array(
-            'name', 'intro', 'introformat', 'completiontimed'));
+            'name', 'intro', 'introformat', 'completiontimed', 'grade'));
 
         // Build the tree
 

@@ -36,7 +36,8 @@ function stopwatch_supports($feature) {
         case FEATURE_SHOW_DESCRIPTION:  return true;
         case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
         case FEATURE_COMPLETION_HAS_RULES: return true;
-        case FEATURE_BACKUP_MOODLE2: return true;
+        case FEATURE_BACKUP_MOODLE2:    return true;
+        case FEATURE_GRADE_HAS_GRADE:   return true;
         default:                        return null;
     }
 }
@@ -60,7 +61,11 @@ function stopwatch_add_instance(stdClass $stopwatch, mod_stopwatch_mod_form $mfo
 
     # You may have to add extra stuff in here #
 
-    return $DB->insert_record('stopwatch', $stopwatch);
+    $stopwatch->id = $DB->insert_record('stopwatch', $stopwatch);
+
+    stopwatch_grade_item_update($stopwatch);
+
+    return $stopwatch->id;
 }
 
 /**
@@ -217,12 +222,11 @@ function stopwatch_get_extra_capabilities() {
 function stopwatch_scale_used($stopwatchid, $scaleid) {
     global $DB;
 
-    /** @example */
-    /*if ($scaleid and $DB->record_exists('stopwatch', array('id' => $stopwatchid, 'grade' => -$scaleid))) {
+    if ($scaleid and $DB->record_exists('stopwatch', array('id' => $stopwatchid, 'grade' => -$scaleid))) {
         return true;
     } else {
         return false;
-    }*/
+    }
 }
 
 /**
@@ -236,7 +240,6 @@ function stopwatch_scale_used($stopwatchid, $scaleid) {
 function stopwatch_scale_used_anywhere($scaleid) {
     global $DB;
 
-    /** @example */
     if ($scaleid and $DB->record_exists('stopwatch', array('grade' => -$scaleid))) {
         return true;
     } else {
@@ -257,15 +260,59 @@ function stopwatch_grade_item_update(stdClass $stopwatch, $grades=null) {
     global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
 
-    /** @example */
-    /*$item = array();
+    $item = array();
     $item['itemname'] = clean_param($stopwatch->name, PARAM_NOTAGS);
     $item['gradetype'] = GRADE_TYPE_VALUE;
     $item['grademax']  = $stopwatch->grade;
     $item['grademin']  = 0;
 
-    grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, null, $item);
-     */
+    if ($stopwatch->grade > 0) {
+        $item['gradetype'] = GRADE_TYPE_VALUE;
+        $item['grademax']  = $stopwatch->grade;
+        $item['grademin']  = 0;
+
+    } else if ($stopwatch->grade < 0) {
+        $item['gradetype'] = GRADE_TYPE_SCALE;
+        $item['scaleid']   = -$stopwatch->grade;
+    } else {
+        $item['gradetype'] = GRADE_TYPE_NONE;
+    }
+
+    if ($grades  === 'reset') {
+        $item['reset'] = true;
+        $grades = null;
+    }
+
+    grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, $grades, $item);
+}
+
+/**
+ * Return grade for given user or all users.
+ *
+ * @param stdClass $data
+ * @param int $userid optional user id, 0 means all users
+ * @return array array of grades, false if none
+ */
+function stopwatch_get_user_grades($data, $userid = 0) {
+    global $DB;
+
+    $params = array($data->course, $data->id);
+    $usertest = '';
+    if ($userid) {
+        $params[] = $userid;
+        $usertest = 'AND s.userid = ?';
+    }
+    return $DB->get_records_sql("
+            SELECT
+                s.userid AS id,
+                s.userid,
+                s.grade AS rawgrade,
+                s.timegraded AS dategraded,
+                s.timecreated AS datesubmitted
+            FROM {stopwatch_user} s
+                JOIN {user} u ON s.userid = u.id
+            WHERE s.courseid = ? AND s.stopwatchid = ?
+            $usertest", $params);
 }
 
 /**
@@ -278,13 +325,13 @@ function stopwatch_grade_item_update(stdClass $stopwatch, $grades=null) {
  * @return void
  */
 function stopwatch_update_grades(stdClass $stopwatch, $userid = 0) {
-    global $CFG, $DB;
+    global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
 
-    /** @example */
-    //$grades = array(); // populate array of grade objects indexed by userid
+    // Array of grade objects indexed by userid.
+    $grades = stopwatch_get_user_grades($stopwatch, $userid);
 
-    //grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, $grades);
+    grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, $grades);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +443,8 @@ function stopwatch_extend_settings_navigation(settings_navigation $settingsnav, 
 function stopwatch_get_completion_state($course, $cm, $userid, $type) {
     global $CFG;
     require_once($CFG->dirroot . '/mod/stopwatch/locallib.php');
-    return mod_stopwatch_get_user_timing($cm, $userid) !== false;
+    $record = mod_stopwatch_get_user_record($cm, $userid);
+    return $record && $record->duration > 0;
 }
 
 /**
@@ -409,7 +457,8 @@ function stopwatch_cm_info_view(cm_info $cm) {
     if ($cm->uservisible &&
             has_capability('mod/stopwatch:view', $cm->context)) {
         require_once($CFG->dirroot . '/mod/stopwatch/locallib.php');
-        if ($record = mod_stopwatch_get_user_timing($cm)) {
+        if (($record = mod_stopwatch_get_user_record($cm)) && $record->duration) {
+            // TODO string
             $cm->set_content('Completed in <b>' .
                     mod_stopwatch_duration_to_string($record->duration) . '</b> on ' .
                     userdate($record->timecreated, '%d/%m/%y <b>%H:%M</b>'));

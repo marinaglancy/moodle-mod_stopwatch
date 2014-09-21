@@ -24,7 +24,7 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function xmldb_stopwatch_upgrade($oldversion) {
-    global $DB;
+    global $DB, $CFG;
 
     $dbman = $DB->get_manager(); // loads ddl manager and xmldb classes
 
@@ -69,16 +69,95 @@ function xmldb_stopwatch_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2014091104, 'stopwatch');
     }
 
-    if ($oldversion < 2014092000) {
+    if ($oldversion < 2014092100) {
 
-        $records = $DB->get_records('stopwatch_timing', array(), 'id', 'id, duration');
-        foreach ($records as $record) {
-            $DB->update_record('stopwatch_timing',
-                    array('id' => $record->id, 'duration' => floor($record->duration/1000)));
+        // Define field grade to be added to stopwatch.
+        $table = new xmldb_table('stopwatch');
+        $field = new xmldb_field('grade', XMLDB_TYPE_NUMBER, '10, 5', null, null, null, '100', 'completiontimed');
+
+        // Conditionally launch add field grade.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
         }
 
         // Stopwatch savepoint reached.
-        upgrade_mod_savepoint(true, 2014092000, 'stopwatch');
+        upgrade_mod_savepoint(true, 2014092100, 'stopwatch');
+    }
+
+    if ($oldversion < 2014092101) {
+
+        // Define table stopwatch_timing to be renamed to NEWNAMEGOESHERE.
+        $table = new xmldb_table('stopwatch_timing');
+
+        // Launch rename table for stopwatch_timing.
+        $dbman->rename_table($table, 'stopwatch_user');
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014092101, 'stopwatch');
+    }
+
+    if ($oldversion < 2014092102) {
+
+        // Define index stopwatchuser (unique) to be added to stopwatch_user.
+        $table = new xmldb_table('stopwatch_user');
+        $index = new xmldb_index('stopwatchuser', XMLDB_INDEX_UNIQUE, array('courseid', 'stopwatchid', 'userid'));
+
+        // Conditionally launch add index stopwatchuser.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014092102, 'stopwatch');
+    }
+
+    if ($oldversion < 2014092103) {
+
+        // Define field grade to be added to stopwatch_user.
+        $table = new xmldb_table('stopwatch_user');
+        $field = new xmldb_field('grade', XMLDB_TYPE_NUMBER, '10, 5', null, null, null, null, 'duration');
+
+        // Conditionally launch add field grade.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('timegraded', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'grade');
+        // Conditionally launch add field timegraded.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014092103, 'stopwatch');
+    }
+
+    if ($oldversion < 2014092104) {
+        require_once($CFG->libdir.'/gradelib.php');
+        $records = $DB->get_records('stopwatch');
+        foreach ($records as $stopwatch) {
+            $item = array();
+            $item['itemname'] = clean_param($stopwatch->name, PARAM_NOTAGS);
+            $item['gradetype'] = GRADE_TYPE_VALUE;
+            $item['grademax']  = $stopwatch->grade;
+            $item['grademin']  = 0;
+            grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, null, $item);
+        }
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014092104, 'stopwatch');
+    }
+    if ($oldversion < 2014092106) {
+
+        // Changing type of field grade on table stopwatch to int.
+        $table = new xmldb_table('stopwatch');
+        $field = new xmldb_field('grade', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '100', 'completiontimed');
+
+        // Launch change of type for field grade.
+        $dbman->change_field_type($table, $field);
+
+        // Stopwatch savepoint reached.
+        upgrade_mod_savepoint(true, 2014092106, 'stopwatch');
     }
 
     return true;

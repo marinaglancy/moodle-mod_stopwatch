@@ -20,6 +20,7 @@ require_once($CFG->libdir . '/completionlib.php');
 
 $cmid = optional_param('id', 0, PARAM_INT); // course_module ID, or
 $stopwatchid = optional_param('s', 0, PARAM_INT);  // stopwatch instance ID - it should be named as the first character of the module
+$cmd = optional_param('cmd', null, PARAM_ALPHA);
 $durationstr = optional_param('durationstr', null, PARAM_NOTAGS);
 
 if ($cmid) {
@@ -33,9 +34,20 @@ if ($cmid) {
 require_login($course, true, $cm);
 $stopwatch = $PAGE->activityrecord;
 
-if ($durationstr && confirm_sesskey()) {
+$cmcontext = context_module::instance($cm->id);
+$cansubmit = has_capability('mod/stopwatch:submit', $cmcontext, null, false);
+$cangrade = has_capability('mod/stopwatch:grade', $cmcontext);
+
+if ($cmd === 'updateduration' && $cansubmit && $durationstr && confirm_sesskey()) {
     mod_stopwatch_update_timer($cm, $stopwatch,
             mod_stopwatch_string_to_duration($durationstr));
+    redirect($cm->url);
+}
+if ($cmd === 'updategrades' && $cangrade && confirm_sesskey()) {
+    $durationarray = optional_param_array('duration', array(), PARAM_NOTAGS);
+    $gradearray = optional_param_array('grade', array(), PARAM_FLOAT);
+    mod_stopwatch_update_grades($cm, $stopwatch,
+            $durationarray, $gradearray);
     redirect($cm->url);
 }
 
@@ -67,7 +79,12 @@ if ($stopwatch->intro) { // Conditions to show the intro can change to look for 
 // Replace the following lines with you own code
 echo $output->heading($cm->get_formatted_name());
 
-echo $output->display_stopwatch($cm, $stopwatch);
+if ($cansubmit) {
+    echo $output->display_stopwatch($cm, $stopwatch);
+}
+if ($cangrade) {
+     echo $output->display_grades($cm, $stopwatch);
+}
 
 // Finish the page
 echo $output->footer();
