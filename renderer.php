@@ -80,8 +80,15 @@ EOD;
         $action = new moodle_url('/mod/stopwatch/view.php');
         $editlink = html_writer::link(new moodle_url('/course/modedit.php', array('update' => $cm->id)),
                 'Edit');
-        $str = <<<EOD
-                <p>Maximum grade for the module is <b>$stopwatch->grade</b> $editlink</p>
+        $str = '';
+        if ($stopwatch->grade > 0) {
+            $str .= "<p>Maximum grade for the module is <b>$stopwatch->grade</b>. $editlink</p>";
+        } else if ($stopwatch->grade < 0) {
+            $str .= "<p>Scale grading is not yet implemented! $editlink</p>";
+        } else {
+            $str .= "<p>No grading is enabled for this module. $editlink</p>";
+        }
+        $str = $str . <<<EOD
 <form id="stopwatchgradeform" method="POST" action="$action">
     <input type="hidden" name="sesskey" value="$sesskey" />
     <input type="hidden" name="id" value="$cm->id" />

@@ -87,7 +87,11 @@ function stopwatch_update_instance(stdClass $stopwatch, mod_stopwatch_mod_form $
 
     # You may have to add extra stuff in here #
 
-    return $DB->update_record('stopwatch', $stopwatch);
+    $result = $DB->update_record('stopwatch', $stopwatch);
+
+    stopwatch_grade_item_update($stopwatch);
+
+    return $result;
 }
 
 /**

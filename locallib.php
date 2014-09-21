@@ -94,9 +94,10 @@ function mod_stopwatch_update_grades($cm, $stopwatch, $durationarray, $gradearra
     $currentgrades = mod_stopwatch_get_all_users($cm, $stopwatch);
     $newgrades = array();
     foreach ($currentgrades as $userid => $record) {
-        $params = array('userid' => $userid, 'courseid' => $cm->course, 'stopwatchid' => $stopwatch->id);
         if ($record->id) {
             $params = array('id' => $record->id);
+        } else {
+            $params = array('userid' => $userid, 'courseid' => $cm->course, 'stopwatchid' => $stopwatch->id);
         }
         $now = time();
         $updateobj = array();
@@ -118,7 +119,7 @@ function mod_stopwatch_update_grades($cm, $stopwatch, $durationarray, $gradearra
             if ($existinggrade !== $grade) {
                 $updateobj['grade'] = $grade;
                 $updateobj['timegraded'] = $now;
-                $newgrades[$userid] = array('userid' => $userid, 'grade' => $grade);
+                $newgrades[$userid] = array('userid' => $userid, 'rawgrade' => $grade);
             }
         }
         if (empty($updateobj)) {
@@ -133,15 +134,13 @@ function mod_stopwatch_update_grades($cm, $stopwatch, $durationarray, $gradearra
             $DB->insert_record('stopwatch_user', $updateobj);
         }
     }
-    //if ($newgrades) {
-    //    grade_update('mod/stopwatch', $stopwatch->course, 'mod', 'stopwatch', $stopwatch->id, 0, $newgrades);
-    //}
-
-                        // Attempt to update the grade item if relevant
-                        $grademodule = fullclone($stopwatch);
-                        $grademodule->cmidnumber = $cm->idnumber;
-                        $grademodule->modname = $cm->modname;
-                        grade_update_mod_grades($grademodule);
+    if ($newgrades) {
+        // Attempt to update the grade item if relevant
+        $grademodule = fullclone($stopwatch);
+        $grademodule->cmidnumber = $cm->idnumber;
+        $grademodule->modname = $cm->modname;
+        grade_update_mod_grades($grademodule);
+    }
 }
 
 function mod_stopwatch_get_all_users(cm_info $cm, $stopwatch) {
