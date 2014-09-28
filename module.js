@@ -49,5 +49,6 @@ M.mod_stopwatch.init = function(Y, cmid) {
     Y.one('#stopwatchform').one('#resume').on('click', resumetimer);
     Y.one('#stopwatchform').one('#pause').on('click', pausetimer);
     Y.one('#stopwatchform').one('#reset').on('click', resettimer);
+    Y.one('#stopwatchform').one('#stop').on('click', pausetimer);
     settimer(0);
 }
